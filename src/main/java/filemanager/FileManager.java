@@ -4,13 +4,17 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.Arrays;
 import java.util.Comparator;
 import java.util.Iterator;
+import java.util.List;
 import java.util.Properties;
 import java.util.function.IntFunction;
 import java.util.function.Supplier;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import java.util.stream.Collector;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import org.apache.logging.log4j.core.lookup.Log4jLookup;
@@ -44,19 +48,20 @@ public class FileManager {
 			logger.log(Level.SEVERE,"'" +path.toString() + "' is not a directory");	
 			throw new Exception(path.toString() + " is not a directory");
 		}
-		Stream<Path> files = Files.list(path);
-		if(files.count() <= 3) {
+
+		List<Path> files = Files.list(path).collect(Collectors.toList());
+
+		if(files.size() <= 3) {
 			logger.warning("For this process the files have to be more than 3 version");
 			System.exit(0);
 		}
 		
-		Supplier<Stream<Path>> streamSupplier = () -> files;
+		files.sort((o1, o2) -> (o1.toFile().lastModified() > o2.toFile().lastModified() ? 1 : -1));
 		
-		streamSupplier.get().sorted((o1, o2) -> (o1.toFile().lastModified() > o2.toFile().lastModified() ? 1 : -1));
-		
-		Iterator<Path> iterator = streamSupplier.get().iterator();
+		Iterator<Path> iterator = files.iterator();
 		int i = 0;
 		while(iterator.hasNext()) {
+			iterator.next();
 			iterator.remove();
 			i++;
 			if(i == 3) {
@@ -65,7 +70,7 @@ public class FileManager {
 		}
 		
 		
-		streamSupplier.get().forEach( p -> {
+		files.forEach( p -> {
 			try {
 				String uniqueName = p.getFileName().toString().split("git")[1];
 				Path pathX = Paths.get(dirPath+xroadName);
@@ -73,7 +78,7 @@ public class FileManager {
 					logger.log(Level.SEVERE,"'" +pathX.toString() + "' is not a directory");	
 					throw new Exception(pathX.toString() + " is not a directory");
 				}
-				Stream<Path> filesX = Files.list(pathX);
+				List<Path> filesX = Files.list(pathX).collect(Collectors.toList());
 				filesX.forEach(p2 -> {
 					if(p2.getFileName().toString().endsWith(uniqueName)) {
 						try {
