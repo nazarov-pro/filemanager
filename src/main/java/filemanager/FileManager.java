@@ -8,6 +8,7 @@ import java.util.Comparator;
 import java.util.Iterator;
 import java.util.Properties;
 import java.util.function.IntFunction;
+import java.util.function.Supplier;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.stream.Stream;
@@ -48,9 +49,12 @@ public class FileManager {
 			logger.warning("For this process the files have to be more than 3 version");
 			System.exit(0);
 		}
-		files.sorted((o1, o2) -> (o1.toFile().lastModified() > o2.toFile().lastModified() ? 1 : -1));
 		
-		Iterator<Path> iterator = files.iterator();
+		Supplier<Stream<Path>> streamSupplier = () -> files;
+		
+		streamSupplier.get().sorted((o1, o2) -> (o1.toFile().lastModified() > o2.toFile().lastModified() ? 1 : -1));
+		
+		Iterator<Path> iterator = streamSupplier.get().iterator();
 		int i = 0;
 		while(iterator.hasNext()) {
 			iterator.remove();
@@ -61,7 +65,7 @@ public class FileManager {
 		}
 		
 		
-		files.forEach( p -> {
+		streamSupplier.get().forEach( p -> {
 			try {
 				String uniqueName = p.getFileName().toString().split("git")[1];
 				Path pathX = Paths.get(dirPath+xroadName);
