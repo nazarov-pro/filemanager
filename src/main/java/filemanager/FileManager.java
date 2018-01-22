@@ -12,9 +12,11 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.stream.Stream;
 
+import org.apache.logging.log4j.core.lookup.Log4jLookup;
+
 public class FileManager {
 
-    static final Logger logger = Logger.getLogger("Main");
+    static final Logger logger = Logger.getLogger(FileManager.class.getName());
 
 	static Properties loadConfiguration() {
 		Path confPath = Paths.get("conf.properties");
